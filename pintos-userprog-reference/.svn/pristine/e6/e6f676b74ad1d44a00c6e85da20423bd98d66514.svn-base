@@ -1,0 +1,15 @@
+This is a reference implementation of Pintos User Programs assignment.
+
+Compilation:
+  - Tested to work with GCC versions 4.4 and 4.6. Ubuntu 12.04.
+  - Please update following files with correct file paths:
+      utils/pintos: $make_disk = "/home/dahiya/os_course/lab2/pintos-repo/src/threads/build/pintos.dsk" if !defined $make_disk;
+      utils/pintos-gdb:GDBMACROS=/home/dahiya/os_course/lab2/pintos-repo/src/misc/gdb-macros
+      utils/Pintos.pm:    $name = find_file ("/home/dahiya/os_course/lab2/pintos-repo/src/threads/build/loader.bin") if !defined $name;
+  
+Implementation Notes:
+  - Most of the documentation is present in the code itself.
+  - Look at the struct thread, struct zombie_thread for more information.
+  - Children are not inherited by any process if the parent dies.
+  - Look at zombie_cleanup* functions how we free up the zombies with dead parents.
+  - User address validation employs the method of software walking the pagedir to know if the address is mapped.
