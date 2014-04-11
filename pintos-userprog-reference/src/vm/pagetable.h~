@@ -1,0 +1,12 @@
+#include <stdbool.h>
+
+struct page_data
+{
+  struct hash_elem hash_elem;
+  data_location loc;
+  int swap_sector; //Valid if loc==swap
+  void * vaddr;
+}
+
+struct page_data *
+page_lookup (const void *address);

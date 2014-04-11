@@ -199,7 +199,7 @@ thread_create (const char *name, int priority,
   t->parent_tid = thread_current()->tid;
   if(thread_current()->tid != 1)
     t->parent_waiting_exec = thread_current();
-
+  t->numpages=0;
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
   kf->eip = NULL;

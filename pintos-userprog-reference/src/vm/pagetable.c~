@@ -1,0 +1,29 @@
+/* Code for supplemental page table */
+
+enum data_location
+{
+	page_table,all_zero,swap,filesys;
+};
+
+
+/* Should be a hashmap for O(1) lookup */
+/* Using pseudocode for now */
+
+struct page_data
+{
+	data_location loc;
+	int swap_sector; //Valid if loc==swap
+
+}
+
+
+//HASH : Key : void * , Value: page_data*
+//To allow faster lookup in pagefault handler
+
+/**************************************************************************************************************/
+
+evict()
+{
+	
+
+}

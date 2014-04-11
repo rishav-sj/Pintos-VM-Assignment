@@ -1,7 +1,7 @@
 #ifndef THREADS_THREAD_H
 //487
 #define THREADS_THREAD_H
-
+#define MAX_STACK 2048
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
@@ -128,7 +128,9 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
-  };
+    void *esp;                 
+    int numpages;  /* 1 initially, incremented on every additional page */
+ };
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

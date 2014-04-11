@@ -21,6 +21,8 @@
 #include "threads/vaddr.h"
 #include "devices/input.h"
 #include "debug_helper.h"
+#include "vm/frame.h"
+#include "vm/pagetable.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -33,6 +35,7 @@ void print_pagedir(uint32_t* pagedir);
 tid_t
 process_execute (const char *file_name_) 
 {
+  /* printf("process exec\n"); */
   char *fn_copy;
   tid_t tid;
   char* file_name;
@@ -73,6 +76,8 @@ process_execute (const char *file_name_)
 static void
 start_process (void *file_name_)
 {
+  /* printf("start proces\n"); */
+  frame_init();
   char *file_name = 0;
   struct intr_frame if_;
   bool success;
@@ -366,6 +371,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
 bool
 load (const char *file_name, void (**eip) (void), void **esp) 
 {
+  /* printf("load \n"); */
   struct thread *t = thread_current ();
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
@@ -547,43 +553,61 @@ static bool
 load_segment (struct file *file, off_t ofs, uint8_t *upage,
               uint32_t read_bytes, uint32_t zero_bytes, bool writable) 
 {
+  /* printf("lets see load segment \n"); */
   ASSERT ((read_bytes + zero_bytes) % PGSIZE == 0);
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
-
+  
   file_seek (file, ofs);
+  off_t offset=ofs;
   while (read_bytes > 0 || zero_bytes > 0) 
     {
+      
       /* Calculate how to fill this page.
          We will read PAGE_READ_BYTES bytes from FILE
          and zero the final PAGE_ZERO_BYTES bytes. */
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
-
+      struct page_data *p = malloc(sizeof(struct page_data));
+/* ------------------------------------------------ */
       /* Get a page of memory. */
-      uint8_t *kpage = palloc_get_page (PAL_USER);
-      if (kpage == NULL)
-        return false;
+      /* uint8_t *kpage = palloc_get_page (PAL_USER); */
+      /* if (kpage == NULL){ */
+      /* 	evict(); */
+      /* 	kpage = palloc_get_page (PAL_USER); */
+      /* 	if(kpage==NULL) */
+      /* 	  PANIC("kpage still NULL \n"); */
+      /* 	  /\* return false; *\/ */
+      /* } */
+      /* /\* Load this page. *\/ */
+      /* if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes) */
+      /*   { */
+      /* 	  printf("File not read \n"); */
+      /*     palloc_free_page (kpage); */
+      /*     return false; */
+      /*   } */
+      /* memset (kpage + page_read_bytes, 0, page_zero_bytes); */
 
-      /* Load this page. */
-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
-
-      /* Add the page to the process's address space. */
-      if (!install_page (upage, kpage, writable)) 
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-
+      /* /\* Add the page to the process's address space. *\/ */
+      /* if (!add_mapping (upage, kpage, writable)) */
+      /*   { */
+      /* 	  printf("mapping not added \n"); */
+      /*     palloc_free_page (kpage); */
+      /*     return false; */
+      /*   } */
+      /* -------------------------------- */
+      p->loc=filesys;
+      p->file=file;
+      p->page_read_bytes=page_read_bytes;
+      p->vaddr=upage;
+      p->writable=writable;
+      p->offset=offset;
+      SPT_insert(p);
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+      offset += PGSIZE;
     }
   return true;
 }
@@ -593,15 +617,22 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp) 
 {
+  /* printf("setup stack \n"); */
   uint8_t *kpage;
   bool success = false;
-
+  
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+  if( kpage==NULL){
+    evict();
+    kpage=palloc_get_page (PAL_USER | PAL_ZERO);
+  }
   if (kpage != NULL) 
     {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
+      success = add_mapping (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+      if (success){
         *esp = PHYS_BASE;
+	thread_current()->numpages++;
+      }
       else
         palloc_free_page (kpage);
     }

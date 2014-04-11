@@ -1,0 +1,29 @@
+FAIL
+Kernel panic in run: PANIC at ../../threads/synch.c:198 in lock_acquire(): assertion `!lock_held_by_current_thread (lock)' failed.
+Call stack: 0xc002d439 0xc0023416 0xc002f3af 0xc0021595 0xc0030e80 0xc0030a5e 0xc0022117 0xc002224b 0xc002d4b1 0xc002e131 0xc0023d84 0xc0023e65 0xc003230e 0xc003237b 0xc0031724 0xc0030d54 0xc003114b 0xc0022117 0xc002224b 0x804a6d7
+Translation of call stack:
+In kernel.o:
+0xc002d439: debug_panic (.../../lib/kernel/debug.c:37)
+0xc0023416: lock_acquire (...../../threads/synch.c:200)
+0xc002f3af: process_exit (...../userprog/process.c:266)
+0xc0021595: thread_exit (..../../threads/thread.c:313)
+0xc0030e80: is_valid_address (...../userprog/syscall.c:233)
+0xc0030a5e: page_fault (.../userprog/exception.c:261)
+0xc0022117: intr_handler (..../threads/interrupt.c:378)
+0xc002224b: intr_entry (threads/intr-stubs.S:39)
+0xc002d4b1: list_remove (.../../lib/kernel/list.c:261)
+0xc002e131: list_pop_front (.../../lib/kernel/list.c:273)
+0xc0023d84: malloc (..../../threads/malloc.c:150)
+0xc0023e65: calloc (..../../threads/malloc.c:171)
+0xc003230e: dir_open (...../filesys/directory.c:38)
+0xc003237b: dir_open_root (...../filesys/directory.c:59)
+0xc0031724: filesys_create (..../../filesys/filesys.c:50)
+0xc0030d54: sys_create (...../userprog/syscall.c:320)
+0xc003114b: syscall_handler (.../../userprog/syscall.c:77)
+0xc0022117: intr_handler (..../threads/interrupt.c:378)
+0xc002224b: intr_entry (threads/intr-stubs.S:39)
+In tests/vm/page-merge-stk:
+0x0804a6d7: create (.../../lib/user/syscall.c:93)
+Translations of user virtual addresses above are based on a guess at
+the binary to use.  If this guess is incorrect, then those
+translations will be misleading.

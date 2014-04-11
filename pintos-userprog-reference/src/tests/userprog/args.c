@@ -9,9 +9,9 @@ int
 main (int argc, char *argv[]) 
 {
   int i;
-
+  /* printf("chck0. \n"); */
   test_name = "args";
-
+  /* printf("chck1. \n"); */
   msg ("begin");
   msg ("argc = %d", argc);
   for (i = 0; i <= argc; i++)

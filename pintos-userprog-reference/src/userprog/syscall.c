@@ -46,7 +46,7 @@ syscall_handler (struct intr_frame *f)
       case SYS_EXIT:
         {
           int status = get_nth_arg_int(f->esp, 1);
-          thread_current()->exit_status = status;
+	  thread_current()->exit_status = status;
           process_terminate();
           return;
         }
@@ -102,6 +102,7 @@ syscall_handler (struct intr_frame *f)
         return;
       case SYS_READ:
         {
+	  /* printf("do we reach here . \n"); */
           int fd = get_nth_arg_int(f->esp, 1);
           char* buf = (char*)get_nth_arg_ptr(f->esp, 2); 
           int size = get_nth_arg_int(f->esp, 3);
@@ -204,8 +205,10 @@ int user_add_range_check(char* start, int size)
 //
 void user_add_range_check_and_terminate(char* start, int size)
 {
+  
   if(!user_add_range_check(start, size))
   {
+    printf("address %p  , %d \n",start,size);
     thread_current()->exit_status = -1;
     process_terminate();
   }
@@ -234,9 +237,10 @@ int is_valid_address(void* add)
     return 0;
   if(add >= (void*)PHYS_BASE)
     return 0;
-  if(!pagedir_get_page(thread_current()->pagedir, add))
+  if(!pagedir_get_page(thread_current()->pagedir, add)){
+    if(SPT_lookup(add)!=NULL) return 1;
     return 0;
-  
+  }
   return 1;
 }
 
@@ -254,7 +258,8 @@ void stack_address_check(void* esp)
 void process_terminate(void)
 {
   struct thread *t = thread_current ();
-  printf ("%s: exit(%d)\n", t->name, t->exit_status);  
+  printf ("%s: exit(%d)\n", t->name, t->exit_status);
+  /* debug_backtrace(); */
   thread_exit();
 }
 

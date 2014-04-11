@@ -1,0 +1,62 @@
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/vm/pt-grow-stack -a pt-grow-stack --swap-size=4 -- -q  -f run pt-grow-stack < /dev/null 2> tests/vm/pt-grow-stack.errors > tests/vm/pt-grow-stack.output
+
+Acceptable output:
+  (pt-grow-stack) begin
+  (pt-grow-stack) cksum: 3424492700
+  (pt-grow-stack) end
+Differences in `diff -u' format:
+  (pt-grow-stack) begin
+- (pt-grow-stack) cksum: 3424492700
+- (pt-grow-stack) end
+
+void
+test_main (void)
+{
+  char stack_obj[4096];
+  struct arc4 arc4;
+
+  arc4_init (&arc4, "foobar", 6);
+  memset (stack_obj, 0, sizeof stack_obj);
+  arc4_crypt (&arc4, stack_obj, sizeof stack_obj);
+  msg ("cksum: %lu", cksum (stack_obj, sizeof stack_obj));
+}
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/userprog/bad-read -a bad-read --swap-size=4 -- -q  -f run bad-read 
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/vm/pt-grow-pusha -a pt-grow-pusha --swap-size=4 -- -q  -f run pt-grow-pusha
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/vm/pt-grow-stack -a pt-grow-stack --swap-size=4 -- -q  -f run pt-grow-stack
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/vm/pt-bad-addr -a pt-bad-addr --swap-size=4 -- -q  -f run pt-bad-addr
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/vm/pt-write-code-2 -a pt-write-code-2 --swap-size=4 -- -q  -f run pt-write-code-2
+
+	
+
+pintos --filesys-size=2 -p ../../examples/echo -a echo -- -f -q run 'echo x'
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/userprog/args-many -a args-many --swap-size=4 -- -q  -f run 'args-many a b c d e f g h i j k l m n o p q r s t u v'
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/userprog/read-boundary -a read-boundary -p ../../tests/userprog/sample.txt -a sample.txt --swap-size=4 -- -q  -f run read-boundary 
+
+pintos -v -k -T 60 --qemu  --filesys-size=2 -p tests/userprog/exec-missing -a exec-missing --swap-size=4 -- -q  -f run exec-missing
+
+Acceptable output:
+  (exec-missing) begin
+  load: no-such-file: open failed
+  (exec-missing) exec("no-such-file"): -1
+  no-such-file: exit(-1)
+  (exec-missing) end
+  exec-missing: exit(0)
+Differences in `diff -u' format:
+  (exec-missing) begin
+  load: no-such-file: open failed
+- (exec-missing) exec("no-such-file"): -1
+- no-such-file: exit(-1)
+- (exec-missing) end
+- exec-missing: exit(0)
++ exec-missing: exit(-1)

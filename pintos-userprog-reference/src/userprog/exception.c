@@ -1,12 +1,18 @@
 #include "userprog/exception.h"
+#include "userprog/process.h"
 //13018
 #include <inttypes.h>
 #include <stdio.h>
+#include <debug.h>
 #include "userprog/gdt.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "userprog/syscall.h"
+#include "userprog/pagedir.h"
+#include "threads/palloc.h"
+#include "vm/frame.h"
+#include "vm/pagetable.h"
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
@@ -138,7 +144,7 @@ page_fault (struct intr_frame *f)
      [IA32-v3a] 5.15 "Interrupt 14--Page Fault Exception
      (#PF)". */
   asm ("movl %%cr2, %0" : "=r" (fault_addr));
-
+  
   /* Turn interrupts back on (they were only off so that we could
      be assured of reading CR2 before it changed). */
   intr_enable ();
@@ -151,19 +157,110 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
-  // terminate the process if pagefault
+    /* printf ("Page fault at %p: %s error %s page in %s context.\n", */
+    /*       fault_addr, */
+    /*       not_present ? "not present" : "rights violation", */
+    /*       write ? "writing" : "reading", */
+    /*       user ? "user" : "kernel"); */
+  
+ // terminate the process if pagefault
   struct thread *t = thread_current ();
-  t->exit_status = -1;
-  process_terminate();
+  /* t->exit_status = -1; */
+  /* process_terminate(); */
 
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
      which fault_addr refers. */
-  printf ("Page fault at %p: %s error %s page in %s context.\n",
-          fault_addr,
-          not_present ? "not present" : "rights violation",
-          write ? "writing" : "reading",
-          user ? "user" : "kernel");
-  kill (f);
+  /* printf("do we reach here %p \n ",pg_round_down(fault_addr)); */
+ 
+  struct page_data *p= SPT_lookup(pg_round_down(fault_addr));
+  
+  if(p!=NULL){
+    if(p->loc!=filesys){
+      /* printf("term0\n"); */
+      t->exit_status = -1; 
+	process_terminate();
+    } //remove later
+    size_t page_zero_bytes = PGSIZE - p->page_read_bytes;
+    uint8_t *kpage = palloc_get_page (PAL_USER);
+      if (kpage == NULL){
+	evict();
+	kpage = palloc_get_page (PAL_USER);
+	if(kpage==NULL)
+	  PANIC("kpage still NULL \n");
+	  /* return false; */
+      }
+      file_seek(p->file,p->offset);
+      /* printf("After file seek \n"); */
+
+      /* Load this page. */
+      if (file_read (p->file, kpage,p->page_read_bytes) != (int)p->page_read_bytes)
+        {
+	  /* printf("After file seek1 \n"); */
+          palloc_free_page (kpage);
+ 
+	  return false; 
+        }
+      memset (kpage + p->page_read_bytes, 0, page_zero_bytes);
+      /* Add the page to the process's address space. */
+      /* printf("After file seek2 \n"); */
+      if (!add_mapping (p->vaddr, kpage, p->writable)) 
+        {
+	  /* printf("After file seek3 \n"); */
+          palloc_free_page (kpage);
+	  return false; 
+        }
+      /* printf("After file seek 4\n"); */
+    return;
+  }
+  /* printf("gelp \n "); */
+  
+  if(user) t->esp= f->esp;  
+  if((!fault_addr) ||  (fault_addr >= (void*)PHYS_BASE)  || (t->esp-fault_addr>32) ){
+    /* printf("term1\n"); */
+    /* PANIC("RUN"); */
+     t->exit_status = -1;
+     process_terminate();
+  }
+     
+
+  /* printf ("Page fault at %p: %s error %s page in %s context and %p.\n", */
+  /*         fault_addr, */
+  /*         not_present ? "not present" : "rights violation", */
+  /*         write ? "writing" : "reading", */
+  /*         user ? "user" : "kernel", */
+  /* 	  t->esp); */
+  
+  
+  /* printf("new %x: \n", ((t->esp)-(fault_addr))-0x20 ); */
+  if((mod((t->esp)-(fault_addr))<= 0x20) && (t->numpages<MAX_STACK)){
+      uint8_t *kpage;
+      bool success = false;
+  
+      kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+      if( kpage==NULL){
+	evict();
+	kpage=palloc_get_page (PAL_USER | PAL_ZERO);
+      }
+      if (kpage != NULL) 
+	{
+	  success = add_mapping (((uint8_t *) PHYS_BASE) -(t->numpages+1)*PGSIZE, kpage, true);
+	  if (success){
+	    //*esp = PHYS_BASE;
+	    t->numpages++;
+	  }
+	  else
+	    palloc_free_page (kpage);
+	}
+  }
+  else {
+      t->exit_status = -1;
+      process_terminate();
+      kill(f);
+  }
+}
+
+int mod( int x){
+  return x>0?x:-x;
 }
 

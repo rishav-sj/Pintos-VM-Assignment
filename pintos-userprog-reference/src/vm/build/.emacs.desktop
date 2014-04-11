@@ -1,0 +1,83 @@
+;; -*- mode: emacs-lisp; coding: emacs-mule; -*-
+;; --------------------------------------------------------------------------
+;; Desktop File for Emacs
+;; --------------------------------------------------------------------------
+;; Created Fri Apr 11 13:24:20 2014
+;; Desktop file format version 206
+;; Emacs version 23.1.1
+
+;; Global section:
+(setq desktop-missing-file-warning nil)
+(setq tags-file-name nil)
+(setq tags-table-list nil)
+(setq search-ring nil)
+(setq regexp-search-ring nil)
+(setq register-alist nil)
+
+;; Buffer section -- buffers listed in same order as in buffer list:
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/pt-bad-addr.c"
+  "pt-bad-addr.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode)
+  155
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/pt-grow-pusha.c"
+  "pt-grow-pusha.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode)
+  617
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/bad-read2.c"
+  "bad-read2.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode)
+  288
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/bad-write2.c"
+  "bad-write2.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode)
+  189
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/bad-read.c"
+  "bad-read.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode)
+  190
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/build/errors1.txt"
+  "errors1.txt"
+  'text-mode
+  '(global-auto-revert-mode)
+  62254
+  '(46602 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+

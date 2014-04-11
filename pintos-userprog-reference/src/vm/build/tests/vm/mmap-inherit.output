@@ -1,0 +1,48 @@
+Copying tests/vm/mmap-inherit to scratch partition...
+Copying ../../tests/vm/sample.txt to scratch partition...
+Copying tests/vm/child-inherit to scratch partition...
+qemu -hda /tmp/rD8uBonnkf.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading............
+Kernel command line: -q -f extract run mmap-inherit
+Pintos booting with 4,096 kB RAM...
+383 pages available in kernel pool.
+383 pages available in user pool.
+PCI: 8192 pages for 0:2.0 failed - may not work
+PCI Device 0:0.0 (8086,1237): Intel - 82441FX (PCI Host) IRQ 0
+PCI Device 0:1.0 (8086,7000): Intel - 82371SB_ISA (PCI-ISA Bridge) IRQ 0
+PCI Device 0:1.1 (8086,7010): Intel - 82371SB_IDE (Unknown Type) IRQ 0
+PCI Device 0:1.3 (8086,7113): Intel - 82371AB/EB/MB_ACPI (Unknown Type) IRQ 9
+PCI Device 0:2.0 (1013,b8): Cirrus Logic - CL-GD5446 (VGA Controller) IRQ 0
+Calibrating timer...  157,081,600 loops/s.
+Initializing EHCI
+Initializing UHCI
+hda: 13,104 sectors (6 MB), model "QM00001", serial "QEMU HARDDISK"
+hda1: 196 sectors (98 kB), Pintos OS kernel (20)
+hda2: 4,096 sectors (2 MB), Pintos file system (21)
+hda3: 208 sectors (104 kB), Pintos scratch (22)
+hda4: 8,192 sectors (4 MB), Pintos swap (23)
+filesys: using hda2
+scratch: using hda3
+swap: using hda4
+Formatting file system...done.
+Boot complete.
+Extracting ustar archive from hda3 into file system...
+Putting 'mmap-inherit' into the file system...
+Putting 'sample.txt' into the file system...
+Putting 'child-inherit' into the file system...
+Erasing ustar archive...
+Executing 'mmap-inherit':
+(mmap-inherit) begin
+(mmap-inherit) open "sample.txt"
+(mmap-inherit) mmap "sample.txt"
+Execution of 'mmap-inherit' complete.
+Timer: 104 ticks
+Thread: 0 idle ticks, 103 kernel ticks, 2 user ticks
+hda2 (filesys): 125 reads, 424 writes
+hda3 (scratch): 207 reads, 2 writes
+hda4 (swap): 0 reads, 0 writes
+Console: 1557 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...
