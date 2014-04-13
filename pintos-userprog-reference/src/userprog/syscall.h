@@ -28,7 +28,9 @@ void sys_seek(int fd, unsigned pos);
 unsigned sys_tell(int fd);
 int sys_remove(char* file_name);
 int sys_create(char* file_name, int size);
-
+void munmap(int id);
+int mmap(int fd , char * addr);
+void clear_mmaps();
 void process_terminate(void);
 
 #endif /* userprog/syscall.h */

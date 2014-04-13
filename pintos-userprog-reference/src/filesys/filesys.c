@@ -48,10 +48,16 @@ filesys_create (const char *name, off_t initial_size)
 {
   block_sector_t inode_sector = 0;
   struct dir *dir = dir_open_root ();
-  bool success = (dir != NULL
-                  && free_map_allocate (1, &inode_sector)
-                  && inode_create (inode_sector, initial_size)
-                  && dir_add (dir, name, inode_sector));
+  bool a=(dir != NULL);
+  bool b=free_map_allocate (1, &inode_sector);
+  bool c=inode_create (inode_sector, initial_size);
+  bool d =dir_add (dir, name, inode_sector);
+  /* printf(" a:%d b:%d c:%d d:%d \n", a , b,c,d); */
+  /* bool success = (dir != NULL */
+  /*                 && free_map_allocate (1, &inode_sector) */
+  /*                 && inode_create (inode_sector, initial_size) */
+  /*                 && dir_add (dir, name, inode_sector)); */
+  bool success = a&&b&&c&&d;
   if (!success && inode_sector != 0) 
     free_map_release (inode_sector, 1);
   dir_close (dir);
@@ -69,11 +75,11 @@ filesys_open (const char *name)
 {
   struct dir *dir = dir_open_root ();
   struct inode *inode = NULL;
-
+  /* printf("In filesys_open %d \n" , dir==NULL); */
   if (dir != NULL)
     dir_lookup (dir, name, &inode);
   dir_close (dir);
-
+    /* printf("check1\n"); */
   return file_open (inode);
 }
 

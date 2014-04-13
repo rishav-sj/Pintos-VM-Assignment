@@ -9,9 +9,10 @@ void
 test_main (void)
 {
   int handle;
-  printf("check0\n");
+  /* printf("check0\n"); */
   CHECK ((handle = open ("sample.txt")) > 1, "open \"sample.txt\"");
-  printf("check1\n");
+  /* printf("check1\n"); */
   read (handle, (void *) test_main, 1);
+  
   fail ("survived reading data into code segment");
 }

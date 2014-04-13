@@ -19,13 +19,14 @@ test_main (void)
   /* Initialize to 0x5a. */
   msg ("initialize");
   memset (buf, 0x5a, sizeof buf);
-
+  
   /* Check that it's all 0x5a. */
   msg ("read pass");
   for (i = 0; i < SIZE; i++)
-    if (buf[i] != 0x5a)
+    if (buf[i] != 0x5a){
+      printf("buf[i]= %d.\n",buf[i]);
       fail ("byte %zu != 0x5a", i);
-
+    }
   /* Encrypt zeros. */
   msg ("read/modify/write pass one");
   arc4_init (&arc4, "foobar", 6);

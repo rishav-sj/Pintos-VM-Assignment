@@ -3,23 +3,33 @@
 #include "lib/kernel/hash.h"
 /* #include "userprog/process.h" */
 #include "filesys/off_t.h"
+#define MAX_MAPS 100
 enum data_location
 {
-	ram,all_zero,swap,filesys
+  mmap1,all_zero,swap,filesys
 };
-
-
+/* int mapid; */
+void *mapids[MAX_MAPS];
 struct page_data
 {
+  void * vaddr;
   struct hash_elem hash_elem;
   enum data_location loc;
+  
   int swap_sector; //Valid if loc==swap
-  void * vaddr;
-  struct file* file; //Valid if loc= filesys
+  
+  struct file* file; //Valid if loc= filesys or mmap
   int page_read_bytes; //valid if loc=filesys
   bool writable;
   off_t offset;
-};
+  
+  //valid loc== mmap
+  int pagenumber;//starting with 0;
+  int mapid;
+  int length;
+  
+  int block_sector; //valid if loc==swap
+}; 
 
 struct lock SPT_lock;
 struct page_data *

@@ -9,6 +9,7 @@
 void
 test_main (void)
 {
+  /* fail("sorrty"); */
   char *actual = (char *) 0x10000000;
   int handle;
   mapid_t map;
@@ -18,6 +19,7 @@ test_main (void)
   CHECK ((map = mmap (handle, actual)) != MAP_FAILED, "mmap \"sample.txt\"");
 
   /* Check that data is correct. */
+  /* printf(" %s and  %s \n", actual, sample); */
   if (memcmp (actual, sample, strlen (sample)))
     fail ("read of mmap'd file reported bad data");
 

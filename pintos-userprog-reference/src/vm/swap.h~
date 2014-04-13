@@ -1,0 +1,3 @@
+
+
+int write_page_to_swap(void *kpage);

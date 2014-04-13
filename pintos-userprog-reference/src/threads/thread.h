@@ -6,7 +6,7 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
-
+#include <hash.h>
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -130,7 +130,9 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
     void *esp;                 
     int numpages;  /* 1 initially, incremented on every additional page */
- };
+    uint32_t filesz;
+    struct hash  *pages;
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

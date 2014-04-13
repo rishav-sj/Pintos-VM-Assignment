@@ -14,6 +14,7 @@
 #include "vm/frame.h"
 #include "vm/pagetable.h"
 
+#define CODE_SEG 0x08048000
 /* Number of page faults processed. */
 static long long page_fault_cnt;
 
@@ -172,56 +173,148 @@ page_fault (struct intr_frame *f)
      body, and replace it with code that brings in the page to
      which fault_addr refers. */
   /* printf("do we reach here %p \n ",pg_round_down(fault_addr)); */
- 
+  
+  if(user) t->esp= f->esp;
+  /* printf(" %p \n",t->esp); */
+  /* printf(" %p \n",(fault_addr)); */
   struct page_data *p= SPT_lookup(pg_round_down(fault_addr));
   
   if(p!=NULL){
-    if(p->loc!=filesys){
-      /* printf("term0\n"); */
-      t->exit_status = -1; 
-	process_terminate();
-    } //remove later
-    size_t page_zero_bytes = PGSIZE - p->page_read_bytes;
-    uint8_t *kpage = palloc_get_page (PAL_USER);
-      if (kpage == NULL){
-	evict();
-	kpage = palloc_get_page (PAL_USER);
-	if(kpage==NULL)
-	  PANIC("kpage still NULL \n");
-	  /* return false; */
+    /* printf(" asasas  \n"); */
+    switch (p->loc)
+      {
+      case filesys:
+	{
+	  size_t page_zero_bytes = PGSIZE - p->page_read_bytes;
+	  uint8_t *kpage = palloc_get_page (PAL_USER);
+ if (kpage == NULL){
+	    evict();
+	    kpage = palloc_get_page (PAL_USER);
+	    if(kpage==NULL)
+	      PANIC("kpage still NULL \n");
+	    /* return false; */
+	  }
+	  file_seek(p->file,p->offset);
+	  /* printf("After file seek \n"); */
+	  
+	  /* Load this page. */
+	  int x=file_read (p->file, kpage,p->page_read_bytes);
+	  /* printf("file read %d: %d" ,x,p->page_read_bytes); */
+	  if (x != (int)p->page_read_bytes)
+	    {
+	      /* printf("After file seek1 \n"); */
+	      palloc_free_page (kpage);
+	      t->exit_status = -1;
+	      process_terminate();
+	      return false; 
+	    }
+	  memset (kpage + p->page_read_bytes, 0, page_zero_bytes);
+	  /* Add the page to the process's address space. */
+	  /* printf("After file seek2 \n"); */
+	  /* printf("writeable: %d \n",p->writable); */
+	  if (!add_mapping (p->vaddr, kpage, p->writable)) 
+	    {
+	      /* printf("After file seek3 \n"); */
+	      palloc_free_page (kpage);
+	      t->exit_status = -1;
+	      process_terminate();
+	     
+	      return false; 
+	    }
+	  
+	  return;
+	}
+	break;
+      case mmap1:
+	{
+	  /* printf("After mmap \n"); */
+	  void *kpage= palloc_get_page(PAL_USER);
+	  if (kpage == NULL){
+	    evict();
+	    kpage = palloc_get_page (PAL_USER);
+	    if(kpage==NULL)
+	      PANIC("kpage still NULL \n");
+	    /* return false; */
+	  }
+	  /* int fd=p->fd; */
+	  /* struct thread *cur = thread_current (); */
+	  struct file* fi =p->file;
+	  /* printf("check1  %d\n",p->offset); */
+	  file_read_at(fi,kpage,p->length,p->offset);
+	  /* printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset); */
+	  /* printf("check2 \n");	  */
+	  if (!add_mapping (p->vaddr, kpage,1)) 
+	    {
+	      PANIC("Couldnt add mapping in Mmap");
+	      palloc_free_page (kpage);
+	      return false; 
+	    }
+	  return;
+	}
+	break;
+      case swap:
+	{
+	  /* printf("loading back swap  %p %p\n",p->vaddr,fault_addr); */
+	    /* lock_acquire(&frame_lock); */
+	  void *kpage= palloc_get_page(PAL_USER);
+	  if (kpage == NULL){
+	    evict();
+	    kpage = palloc_get_page (PAL_USER);
+	    if(kpage==NULL)
+	      PANIC("kpage still NULL \n");
+	    /* return false; */
+	  }
+	  
+	  /* lock_release(&frame_lock); */
+	  bool test=add_mapping (p->vaddr, kpage,1);
+	   if (!test) 
+	    {
+	      /* PANIC("Couldnt add mapping in swap"); */
+	      palloc_free_page (kpage);    
+	      return false; 
+	    }
+	   else
+	     pagedir_set_dirty(t->pagedir,p->vaddr,true);
+	  read_page_from_swap(kpage,p->block_sector);
+	  SPT_remove(p);
+	  return;
+	}
+	break;
+      default:
+	{
+	  PANIC("NOT CASE-INCORRECT LOC");
+	  t->exit_status = -1; 
+	  process_terminate();
+	}
       }
-      file_seek(p->file,p->offset);
-      /* printf("After file seek \n"); */
-
-      /* Load this page. */
-      if (file_read (p->file, kpage,p->page_read_bytes) != (int)p->page_read_bytes)
-        {
-	  /* printf("After file seek1 \n"); */
-          palloc_free_page (kpage);
- 
-	  return false; 
-        }
-      memset (kpage + p->page_read_bytes, 0, page_zero_bytes);
-      /* Add the page to the process's address space. */
-      /* printf("After file seek2 \n"); */
-      if (!add_mapping (p->vaddr, kpage, p->writable)) 
-        {
-	  /* printf("After file seek3 \n"); */
-          palloc_free_page (kpage);
-	  return false; 
-        }
-      /* printf("After file seek 4\n"); */
-    return;
   }
-  /* printf("gelp \n "); */
   
-  if(user) t->esp= f->esp;  
-  if((!fault_addr) ||  (fault_addr >= (void*)PHYS_BASE)  || (t->esp-fault_addr>32) ){
+  /* printf(" we soundt be here \n"); */
+  if( !( t->esp-fault_addr< (void *)128 || fault_addr-t->esp < (void*) 128))
+    {
+   t->exit_status = -1;
+    process_terminate();
+  }   
+  if((!fault_addr) ||  (fault_addr >= (void*)PHYS_BASE) ) {
     /* printf("term1\n"); */
     /* PANIC("RUN"); */
-     t->exit_status = -1;
-     process_terminate();
+    t->exit_status = -1;
+    process_terminate();
   }
+  if(fault_addr>=CODE_SEG && fault_addr <= ( CODE_SEG+t->filesz)){
+    /* printf("Code segment access \n"); */
+    t->exit_status = -1;
+    process_terminate();
+  }
+ 
+    /* if(p->loc!=filesys){ */
+    /*   /\* printf("term0\n"); *\/ */
+    /*   t->exit_status = -1;  */
+    /* 	process_terminate(); */
+    /* } //remove later */
+   
+  /* printf("gelp \n "); */
+  
      
 
   /* printf ("Page fault at %p: %s error %s page in %s context and %p.\n", */
@@ -234,30 +327,32 @@ page_fault (struct intr_frame *f)
   
   /* printf("new %x: \n", ((t->esp)-(fault_addr))-0x20 ); */
   if((mod((t->esp)-(fault_addr))<= 0x20) && (t->numpages<MAX_STACK)){
-      uint8_t *kpage;
-      bool success = false;
+    uint8_t *kpage;
+    bool success = false;
   
-      kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-      if( kpage==NULL){
-	evict();
-	kpage=palloc_get_page (PAL_USER | PAL_ZERO);
-      }
-      if (kpage != NULL) 
-	{
-	  success = add_mapping (((uint8_t *) PHYS_BASE) -(t->numpages+1)*PGSIZE, kpage, true);
-	  if (success){
-	    //*esp = PHYS_BASE;
-	    t->numpages++;
-	  }
-	  else
-	    palloc_free_page (kpage);
+    kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+    if( kpage==NULL){
+      evict();
+      kpage=palloc_get_page (PAL_USER | PAL_ZERO);
+    }
+    if (kpage != NULL) 
+      {
+	success = add_mapping (((uint8_t *) PHYS_BASE) -(t->numpages+1)*PGSIZE, kpage, true);
+	if (success){
+	  //*esp = PHYS_BASE;
+	  t->numpages++;
 	}
+	else
+	  palloc_free_page (kpage);
+      }
   }
   else {
-      t->exit_status = -1;
-      process_terminate();
-      kill(f);
+    t->exit_status = -1;
+    process_terminate();
+    kill(f);
   }
+
+  
 }
 
 int mod( int x){

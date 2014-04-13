@@ -3,7 +3,9 @@
 #include "lib/kernel/hash.h"
 #include "pagetable.h"
 #include "threads/synch.h"
-struct hash pages;
+#include "threads/thread.h"
+#include "threads/vaddr.h"
+
 
 
 
@@ -40,12 +42,13 @@ page_less (const struct hash_elem *a_, const struct hash_elem *b_,
 struct page_data *
 SPT_lookup (const void *address)
 {
+  struct hash *pages= thread_current()->pages;
   /* printf("Looking up %p \n",address); */
   struct page_data p;
   struct hash_elem *e;
-
+  
   p.vaddr = address;
-  e = hash_find (&pages, &p.hash_elem);
+  e = hash_find (pages, &p.hash_elem);
   if( e != NULL ){
     struct page_data* p1= hash_entry (e, struct page_data, hash_elem);
     /* printf("p1 %p \n",p1->vaddr); */
@@ -54,22 +57,49 @@ SPT_lookup (const void *address)
   else return NULL;
 }
 
-void SPT_init(){
+struct page_data *
+SPT_lookup_byfile( struct file * f){
+  struct hash* pages= thread_current()->pages;
+  struct hash_iterator i;
   
-  hash_init (&pages, page_hash, page_less, NULL);
+  hash_first (&i, pages);
+  while (hash_next (&i))
+    {
+      struct page_data *p = hash_entry (hash_cur (&i), struct page_data, hash_elem);
+      if(p->file==f && p->loc ==mmap1) return p;
+    }
+  return NULL;
+}
+void SPT_init(){
+  struct hash* pages= malloc(sizeof(struct hash));
+  struct thread *t=thread_current();
+  t->pages=pages;
+  hash_init (pages, page_hash, page_less, NULL);
   lock_init(&SPT_lock);
+  /* mapid=0; */
+  int i;
+  for(i=0;i<MAX_MAPS;i++){
+    mapids[i]=NULL;
+  }
 }
 
 void SPT_insert(struct page_data *p){
- 
+    struct hash* pages= thread_current()->pages;
+  if(p->vaddr> PHYS_BASE-PGSIZE || p-> vaddr <= 0)
+    {
+      thread_current()->exit_status = -1;
+      process_terminate();
+    }	   
   /* printf("Insertng address : %p and filesys:%d and ram:  %d \n",p->vaddr,p->loc==filesys,p->loc==ram); */
-  hash_insert(&pages,&p->hash_elem);
+  hash_insert(pages,&p->hash_elem);
 }
 
 bool SPT_remove(const void *address ){
+    struct hash* pages= thread_current()->pages;
   /* printf("Rempvogn address %p, \n", address); */
   struct page_data *p=SPT_lookup(address);
   if(p==NULL) return false;
-  hash_delete ( &pages, &p->hash_elem);
+  if(p->loc==mmap1) mapids[p->mapid]=NULL;
+  hash_delete ( pages, &p->hash_elem);
   return true;
 }

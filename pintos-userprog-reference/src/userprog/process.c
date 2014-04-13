@@ -78,6 +78,7 @@ start_process (void *file_name_)
 {
   /* printf("start proces\n"); */
   frame_init();
+  SPT_init();
   char *file_name = 0;
   struct intr_frame if_;
   bool success;
@@ -441,6 +442,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
               uint32_t mem_page = phdr.p_vaddr & ~PGMASK;
               uint32_t page_offset = phdr.p_vaddr & PGMASK;
               uint32_t read_bytes, zero_bytes;
+	      t->filesz=phdr.p_filesz;
               if (phdr.p_filesz > 0)
                 {
                   /* Normal segment.

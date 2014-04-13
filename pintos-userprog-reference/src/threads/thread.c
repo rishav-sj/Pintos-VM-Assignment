@@ -12,6 +12,13 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "threads/palloc.h"
+#include "vm/frame.h"
+#include "vm/swap.h"
+#include "vm/pagetable.h"
+#include <list.h>
+#include <hash.h>
+
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -99,12 +106,13 @@ thread_init (void)
   list_init (&all_list);
   list_init (&all_zombie);
   lock_init (&filesys_lock);
-
+ 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+ 
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -298,15 +306,49 @@ thread_tid (void)
 
 /* Deschedules the current thread and destroys it.  Never
    returns to the caller. */
+void free_res(){
+  struct list_elem *e;
+  lock_acquire(&framelock);
+  for (e = list_begin (&framelist); e != list_end (&framelist);
+       e = list_next (e))
+    {
+      struct frame *f = list_entry(e, struct frame , elem);
+      /* printf(" first clean %p %p \n ",f->upage,f->kpage); */
+      if(f->thread==thread_current())
+	list_remove(e);
+	  
+    }
+  lock_release(&framelock); 
+  struct hash* pages= thread_current()->pages;
+  struct hash_iterator i;
+  
+  hash_first (&i, pages);
+  while (hash_next (&i))
+    {
+      struct page_data *p = hash_entry (hash_cur (&i), struct page_data, hash_elem);
+      if( p->loc ==swap) delete_page(p->block_sector);
+    }
+  free(thread_current()->pages);
+}
+
 void
 thread_exit (void) 
 {
   ASSERT (!intr_context ());
-
+  clear_mmaps();
+  /* printf(" thread exit 2\n");   */
+  free_res();
+  if(lock_held_by_current_thread(&filesys_lock))
+     lock_release(&filesys_lock);
 #ifdef USERPROG
   process_exit ();
 #endif
-
+    /* printf(" thread exit 1\n"); */
+  /* clear_mmaps(); */
+  /* printf(" thread exit 2\n");   */
+  /* free_res(); */
+   /* printf(" thread exit 3\n"); */
+   /* printf(" thread exit 4\n"); */
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
      when it call schedule_tail(). */
@@ -320,7 +362,7 @@ thread_exit (void)
   // if yes then unblock it
   if(t_cur->parent_waiting)
     thread_unblock(t_cur->parent_waiting);
-  
+  /* printf(" thread exit 5\n"); */
   list_remove (&t_cur->allelem);
   t_cur->status = THREAD_DYING;
   schedule ();

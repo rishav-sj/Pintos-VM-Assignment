@@ -98,17 +98,20 @@ lookup (const struct dir *dir, const char *name,
   
   ASSERT (dir != NULL);
   ASSERT (name != NULL);
-
+  	/* printf("program.name is : %s\n", name); */
   for (ofs = 0; inode_read_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
        ofs += sizeof e) 
+	
     if (e.in_use && !strcmp (name, e.name)) 
       {
+	/* printf("e.name is : %s\n", e.name); */
         if (ep != NULL)
           *ep = e;
         if (ofsp != NULL)
           *ofsp = ofs;
         return true;
       }
+  /* printf("returning false from lookup \n"); */
   return false;
 }
 
@@ -127,9 +130,10 @@ dir_lookup (const struct dir *dir, const char *name,
 
   if (lookup (dir, name, &e, NULL))
     *inode = inode_open (e.inode_sector);
-  else
+  else{
+    /* printf("In dir lookup %d \n"); */
     *inode = NULL;
-
+  }
   return *inode != NULL;
 }
 
@@ -148,15 +152,15 @@ dir_add (struct dir *dir, const char *name, block_sector_t inode_sector)
 
   ASSERT (dir != NULL);
   ASSERT (name != NULL);
-
+  /* printf("check1\n"); */
   /* Check NAME for validity. */
   if (*name == '\0' || strlen (name) > NAME_MAX)
     return false;
-
+  /* printf("check2\n"); */
   /* Check that NAME is not in use. */
   if (lookup (dir, name, NULL, NULL))
     goto done;
-
+  /* printf("check3\n"); */
   /* Set OFS to offset of free slot.
      If there are no free slots, then it will be set to the
      current end-of-file.
@@ -174,7 +178,7 @@ dir_add (struct dir *dir, const char *name, block_sector_t inode_sector)
   strlcpy (e.name, name, sizeof e.name);
   e.inode_sector = inode_sector;
   success = inode_write_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
-
+  /* printf("check4\n"); */
  done:
   return success;
 }

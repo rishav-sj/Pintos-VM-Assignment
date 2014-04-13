@@ -2,6 +2,8 @@
 //14406
 #include <stdio.h>
 #include <syscall-nr.h>
+#include <list.h>
+#include <hash.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/synch.h"
@@ -12,15 +14,18 @@
 #include "process.h"
 #include "pagedir.h"
 #include "devices/input.h"
-
+#include "vm/pagetable.h"
 //#define DEBUG
 #include "debug_helper.h"
-
+#include "threads/palloc.h"
+#include "vm/frame.h"
+#include "vm/swap.h"
 extern struct lock filesys_lock;
 
 int is_valid_address(void* add);
 static void syscall_handler (struct intr_frame *);
-
+void * min_check_ptr(void *esp, int a);
+void clear_mmaps();
 void
 syscall_init (void) 
 {
@@ -87,10 +92,12 @@ syscall_handler (struct intr_frame *f)
         return;
       case SYS_OPEN:
         {
+	  
           char* file_name = (char*)get_nth_arg_ptr(f->esp, 1); 
           user_string_add_range_check_and_terminate(file_name); 
           DPRINTF("sys_open(%s)\n", file_name);
           f->eax = sys_open(file_name);
+	 
         }
         return; 
       case SYS_FILESIZE:
@@ -143,10 +150,25 @@ syscall_handler (struct intr_frame *f)
           sys_close(fd);
         }
         return;
-        /*
+       
       case SYS_MMAP:
+	{
+	 
+	  int fd= get_nth_arg_int(f->esp,1);
+	  /* printf("calling mmap4 \n"); */
+	  void* addr = min_check_ptr(f->esp, 2); 
+	  /* printf("calling mmap1 \n"); */
+	  f->eax= mmap(fd,addr);
+	}
+	return;
       case SYS_MUNMAP:
-      case SYS_CHDIR:
+	{
+	    /* printf("in Sysvcsll \n"); */
+	  int mapid = get_nth_arg_int(f->esp,1);
+	  munmap(mapid);
+	}
+	return;
+	/* case SYS_CHDIR:
       case SYS_MKDIR:
       case SYS_READDIR:
       case SYS_ISDIR:
@@ -175,10 +197,22 @@ int get_nth_arg_int(void* esp, int n)
 // ptr value are invalid
 void* get_nth_arg_ptr(void* esp, int n)
 {
+  /* printf("Addr 1 %p\n", (char*)((int*)esp+n)); */
+  /* printf("Addr2 %p \n",  (char*)(*((int*)esp + n))); */
   user_add_range_check_and_terminate((char*)((int*)esp+n),4); 
   user_add_range_check_and_terminate((char*)(*((int*)esp + n)), 1); 
   return (void*)(*((int*)esp + n));
 }
+
+void* min_check_ptr(void* esp, int n)
+{
+  /* printf("Addr 1 %p\n", (char*)((int*)esp+n)); */
+  /* printf("Addr2 %p \n",  (char*)(*((int*)esp + n))); */
+  /* is_user((char*)((int*)esp+n),4);  */
+  /* is_user((char*)(*((int*)esp + n)), 1);  */
+  return (void*)(*((int*)esp + n));
+}
+/* void is_user( */
 
 // check for a range of address for validity
 // the address should be below PHYS_BASE and
@@ -205,10 +239,9 @@ int user_add_range_check(char* start, int size)
 //
 void user_add_range_check_and_terminate(char* start, int size)
 {
-  
-  if(!user_add_range_check(start, size))
+    if(!user_add_range_check(start, size))
   {
-    printf("address %p  , %d \n",start,size);
+    /* printf("address %p  , %d \n",start,size); */
     thread_current()->exit_status = -1;
     process_terminate();
   }
@@ -238,7 +271,7 @@ int is_valid_address(void* add)
   if(add >= (void*)PHYS_BASE)
     return 0;
   if(!pagedir_get_page(thread_current()->pagedir, add)){
-    if(SPT_lookup(add)!=NULL) return 1;
+    if(SPT_lookup(pg_round_down(add))!=NULL) return 1;
     return 0;
   }
   return 1;
@@ -253,6 +286,7 @@ void stack_address_check(void* esp)
       process_terminate();
   }
 }
+
 
 // prints the exit code and terminates the process
 void process_terminate(void)
@@ -336,13 +370,35 @@ int sys_remove(char* file_name)
   lock_release(&filesys_lock);
   return ret;
 }
-
+void load_file(struct file* fi){
+  struct page_data *p=SPT_lookup_byfile(fi);
+  if(p==NULL) return;
+  void *kpage= palloc_get_page(PAL_USER);
+  if (kpage == NULL){
+    evict();
+    kpage = palloc_get_page (PAL_USER);
+    if(kpage==NULL)
+      PANIC("kpage still NULL \n");
+    /* return false; */
+  }
+  file_read_at(fi,kpage,p->length,p->offset);
+  /* printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset); */
+  /* printf("check2 %p \n",p->vaddr); */
+  if (!add_mapping (p->vaddr, kpage,1)) 
+    {
+      /* PANIC("Couldnt add mapping in Mmap"); */
+      palloc_free_page (kpage);
+      return false; 
+    }
+  SPT_remove(p->vaddr);
+}
 void sys_close(int fd)
 {
   if(fd >= 0 && fd < FDTABLESIZE) // is valid FD?
   {
     struct thread *t = thread_current ();
     struct file* fi = t->fd_table[fd];
+     load_file(fi);
     if(fi)
     {
       lock_acquire(&filesys_lock);
@@ -457,3 +513,115 @@ unsigned sys_tell(int fd)
   return -1;
 }
 
+void write_back_map(void * upage, struct file *file ,int offset ){
+  void * kpage= pagedir_get_page(thread_current()->pagedir,upage);
+  /* file->pos=offset; */
+  /* printf("writing back at %p \n",upage); */
+  struct page_data *p= SPT_lookup(upage);
+  if(pagedir_is_dirty(thread_current()->pagedir,upage))
+  file_write_at(file,kpage,p->length,offset);
+}
+
+
+int mmap(int fd , char * addr)
+{
+  /* printf("calling mmap \n"); */
+  struct thread *cur = thread_current ();
+  struct file* fi = cur->fd_table[fd];
+  if(fi==NULL)
+    return -1;
+  int length=file_length(fi);
+  if(length==0) 
+    return -1;
+  if(((int)addr)%PGSIZE) 
+    return -1;
+  if(!addr)
+    return -1;
+  if( fd==0 || fd ==1)
+    return -1;
+  int i,n;
+  /* printf(" length %d\n" , length); */
+  for(i=0;PGSIZE*i<length;i++){
+     /* printf("check 11 "); */
+    if(SPT_lookup(addr+PGSIZE*i)!=NULL)
+      return -1;
+      /* printf("check 12 "); */
+    if(pagedir_get_page(cur->pagedir,addr+PGSIZE*i)!=NULL)
+      return -1;
+      /* printf("check 13 "); */
+  }
+    /* printf("check 122 "); */
+  int mapid=find_first_free();
+    /* printf("check 123 "); */
+  int bytesread=0;
+  for(n=0;n<i;n++){
+    /* if(i>1&& length< (n+1)*PGSIZE) continue; */
+    struct page_data *p= malloc(sizeof(struct page_data));
+  /* printf("mmap created with id %p \n",addr+n*4096); */
+    p->vaddr=addr+n*PGSIZE;
+    p->loc= mmap1;
+    p->file=fi;
+    p->pagenumber=n;
+    p->mapid=mapid;
+    p->offset=n*PGSIZE;
+    p->length=min(PGSIZE,length-bytesread);
+    SPT_insert(p);
+    bytesread+=PGSIZE;
+  }
+  
+  mapids[mapid]=addr;
+  return mapid;
+}
+int min(int a , int b){
+  return a>b?b:a;
+}
+void munmap(int id){
+
+  void * add= mapids[id];
+  if(add==NULL)
+    return;
+  /* printf("are \n"); */
+  struct file* fi=SPT_lookup(add)->file;
+  /* struct thread *cur = thread_current (); */
+   /* = cur->fd_table[fd]; */
+  int offset=0;
+  while(1){
+/* printf("LOOP\n"); */
+      
+    struct page_data *p = SPT_lookup(add);
+    if(p!=NULL){ 
+    /* printf("are %d \n",p); */
+      if(p->loc==mmap1 && p->mapid==id){
+	write_back_map(add,fi,offset);	
+	SPT_remove(add);
+	/* printf("are 1\n"); */
+	if(get_elem(add)!=NULL)
+	remove_mapping(add,pagedir_get_page(thread_current()->pagedir,add),get_elem(add));
+	/* printf("are 3\n"); */
+      }
+      else break;}
+    else break;
+    add=add+PGSIZE;
+    offset +=PGSIZE;
+  }
+  /* printf("are we out %d \n",id); */
+  mapids[id]=NULL;
+}
+
+int find_first_free(){
+  int i=0;
+  while( i<MAX_MAPS){
+    if(mapids[i]==NULL) return i;
+    i++;
+  }
+  PANIC("MAPIDS FULL");
+}
+
+void clear_mmaps(){
+  int i;
+  for(i=0;i<MAX_MAPS;i++){
+    if(mapids[i]!=NULL){
+      munmap(i);
+    }
+  }
+}

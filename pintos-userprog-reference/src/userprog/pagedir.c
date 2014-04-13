@@ -142,7 +142,7 @@ pagedir_get_page (uint32_t *pd, const void *uaddr)
    bits in the page table entry are preserved.
    UPAGE need not be mapped. */
 void
-pagedir_clear_page (uint32_t *pd, void *upage)
+pagedir_clear_page (uint32_t *pd, void *upage) 
 {
   uint32_t *pte;
 

@@ -9,8 +9,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <list.h>
+
+struct list framelist;
+struct lock framelock;
+
+struct frame{
+  struct list_elem elem;
+  void *upage;
+  void *kpage;
+  struct thread *thread;
+};
+
 void frame_init();
 void add_list(void *kapge,void *upage);
 void evict();
 
 bool add_mapping(void *upage , void *kpage , bool writable);
+void remove_mapping(void *upage,void* kpage,struct list_elem *e);
+

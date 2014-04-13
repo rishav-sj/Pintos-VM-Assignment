@@ -18,10 +18,12 @@ test_main (void)
     {
       CHECK ((handle[i] = open ("sample.txt")) > 1,
              "open \"sample.txt\" #%zu", i);
+       /* printf("check 10"); */
       CHECK (mmap (handle[i], actual[i]) != MAP_FAILED,
              "mmap \"sample.txt\" #%zu at %p", i, (void *) actual[i]);
+      /* printf("check 20");    */
     }
-
+  /* printf("check1"); */
   for (i = 0; i < 2; i++)
     CHECK (!memcmp (actual[i], sample, strlen (sample)),
            "compare mmap'd file %zu against data", i);
