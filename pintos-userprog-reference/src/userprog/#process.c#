@@ -23,7 +23,7 @@
 #include "debug_helper.h"
 #include "vm/frame.h"
 #include "vm/pagetable.h"
-struct lock filesys_lock2;
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 void print_pagedir(uint32_t* pagedir);
@@ -76,7 +76,7 @@ process_execute (const char *file_name_)
 static void
 start_process (void *file_name_)
 {
-  printf("start proces\n");
+  /* printf("start proces\n"); */
  
   SPT_init();
   char *file_name = 0;

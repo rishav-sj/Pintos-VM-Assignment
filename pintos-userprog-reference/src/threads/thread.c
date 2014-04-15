@@ -343,6 +343,12 @@ thread_exit (void)
 #ifdef USERPROG
   process_exit ();
 #endif
+
+  if(lock_held_by_current_thread(&framelock))
+     lock_release(&framelock);
+  if(lock_held_by_current_thread(&swap_lock))
+    lock_release(&swap_lock);
+
     /* printf(" thread exit 1\n"); */
   /* clear_mmaps(); */
   /* printf(" thread exit 2\n");   */

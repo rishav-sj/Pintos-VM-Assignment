@@ -3,12 +3,12 @@
 #include "threads/synch.h"
 #include "lib/kernel/bitmap.h"
 #define SECTORSPERPAGE PGSIZE/BLOCK_SECTOR_SIZE
-
+#include "vm/swap.h"
 
 struct block * swap_block;
 int swapsize; //Number of sectors
 struct bitmap * occupied; //Map of which sectors are occupied (bit-array)
-struct lock swap_lock;
+
 
 /* Initially swap block is assumed to be empty*/
 /* Size -> number of block sectors */

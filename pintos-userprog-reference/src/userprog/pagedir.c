@@ -6,7 +6,7 @@
 #include "threads/init.h"
 #include "threads/pte.h"
 #include "threads/palloc.h"
-
+#include "threads/thread.h"
 static uint32_t *active_pd (void);
 static void invalidate_pagedir (uint32_t *);
 
@@ -29,7 +29,7 @@ void
 pagedir_destroy (uint32_t *pd) 
 {
   uint32_t *pde;
-
+  printf("pagedirc called by %d \n",thread_current()->tid);
   if (pd == NULL)
     return;
 

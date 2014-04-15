@@ -33,9 +33,9 @@ struct page_data
 
 struct lock SPT_lock;
 struct page_data *
-SPT_lookup (const void *address);
+SPT_lookup (const void *address,struct thread *t);
 
 void SPT_init();
 
-void SPT_insert(struct page_data *p);
-bool SPT_remove(const void *address );
+void SPT_insert(struct page_data *p,struct thread *t);
+bool SPT_remove(const void *address,struct thread *t);

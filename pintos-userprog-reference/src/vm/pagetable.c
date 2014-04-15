@@ -40,9 +40,9 @@ page_less (const struct hash_elem *a_, const struct hash_elem *b_,
 /* Returns the page containing the given virtual address,
    or a null pointer if no such page exists. */
 struct page_data *
-SPT_lookup (const void *address)
+SPT_lookup (const void *address,struct thread * t)
 {
-  struct hash *pages= thread_current()->pages;
+  struct hash *pages= t->pages;
   /* printf("Looking up %p \n",address); */
   struct page_data p;
   struct hash_elem *e;
@@ -83,21 +83,22 @@ void SPT_init(){
   }
 }
 
-void SPT_insert(struct page_data *p){
-    struct hash* pages= thread_current()->pages;
+void SPT_insert(struct page_data *p,struct thread* t){
+    struct hash* pages= t->pages;
   if(p->vaddr> PHYS_BASE-PGSIZE || p-> vaddr <= 0)
     {
-      thread_current()->exit_status = -1;
+      PANIC("NOT HANDLED");
+      t->exit_status = -1;
       process_terminate();
     }	   
   /* printf("Insertng address : %p and filesys:%d and ram:  %d \n",p->vaddr,p->loc==filesys,p->loc==ram); */
   hash_insert(pages,&p->hash_elem);
 }
 
-bool SPT_remove(const void *address ){
-    struct hash* pages= thread_current()->pages;
+bool SPT_remove(const void *address,struct thread *t ){
+    struct hash* pages= t->pages;
   /* printf("Rempvogn address %p, \n", address); */
-  struct page_data *p=SPT_lookup(address);
+    struct page_data *p=SPT_lookup(address,t);
   if(p==NULL) return false;
   if(p->loc==mmap1) mapids[p->mapid]=NULL;
   hash_delete ( pages, &p->hash_elem);

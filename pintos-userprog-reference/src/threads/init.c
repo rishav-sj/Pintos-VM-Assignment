@@ -124,7 +124,8 @@ main (void)
   exception_init ();
   syscall_init ();
 #endif
-
+  printf("init in theread \n");
+ 
   /* Start thread scheduler and enable interrupts. */
   thread_start ();
   serial_init_queue ();
@@ -140,7 +141,7 @@ main (void)
 #endif
 
   printf ("Boot complete.\n");
-  
+   frame_init();
   /* Run actions specified on kernel command line. */
   run_actions (argv);
 

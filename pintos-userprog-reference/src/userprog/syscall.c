@@ -70,8 +70,10 @@ syscall_handler (struct intr_frame *f)
           int pid = get_nth_arg_int(f->esp, 1);
           int ret = process_wait(pid);
           DPRINTF("wait for pid %d by %d return %d\n", pid, thread_current()->tid ,ret);
+	  printf("returnning value :%d \n",ret);
           f->eax = ret;
         }
+	
         return;
       case SYS_CREATE:
         {
@@ -271,7 +273,7 @@ int is_valid_address(void* add)
   if(add >= (void*)PHYS_BASE)
     return 0;
   if(!pagedir_get_page(thread_current()->pagedir, add)){
-    if(SPT_lookup(pg_round_down(add))!=NULL) return 1;
+    if(SPT_lookup(pg_round_down(add),thread_current())!=NULL) return 1;
     return 0;
   }
   return 1;
@@ -371,6 +373,7 @@ int sys_remove(char* file_name)
   return ret;
 }
 void load_file(struct file* fi){
+  
   struct page_data *p=SPT_lookup_byfile(fi);
   if(p==NULL) return;
   void *kpage= palloc_get_page(PAL_USER);
@@ -382,15 +385,15 @@ void load_file(struct file* fi){
     /* return false; */
   }
   file_read_at(fi,kpage,p->length,p->offset);
-  /* printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset); */
+  printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset);
   /* printf("check2 %p \n",p->vaddr); */
-  if (!add_mapping (p->vaddr, kpage,1)) 
+  if (!add_mapping (p->vaddr, kpage,1,false)) 
     {
       /* PANIC("Couldnt add mapping in Mmap"); */
       palloc_free_page (kpage);
       return false; 
     }
-  SPT_remove(p->vaddr);
+  SPT_remove(p->vaddr,thread_current());
 }
 void sys_close(int fd)
 {
@@ -517,7 +520,7 @@ void write_back_map(void * upage, struct file *file ,int offset ){
   void * kpage= pagedir_get_page(thread_current()->pagedir,upage);
   /* file->pos=offset; */
   /* printf("writing back at %p \n",upage); */
-  struct page_data *p= SPT_lookup(upage);
+  struct page_data *p= SPT_lookup(upage,thread_current());
   if(pagedir_is_dirty(thread_current()->pagedir,upage))
   file_write_at(file,kpage,p->length,offset);
 }
@@ -543,7 +546,7 @@ int mmap(int fd , char * addr)
   /* printf(" length %d\n" , length); */
   for(i=0;PGSIZE*i<length;i++){
      /* printf("check 11 "); */
-    if(SPT_lookup(addr+PGSIZE*i)!=NULL)
+    if(SPT_lookup(addr+PGSIZE*i,thread_current())!=NULL)
       return -1;
       /* printf("check 12 "); */
     if(pagedir_get_page(cur->pagedir,addr+PGSIZE*i)!=NULL)
@@ -565,7 +568,7 @@ int mmap(int fd , char * addr)
     p->mapid=mapid;
     p->offset=n*PGSIZE;
     p->length=min(PGSIZE,length-bytesread);
-    SPT_insert(p);
+    SPT_insert(p,thread_current());
     bytesread+=PGSIZE;
   }
   
@@ -576,27 +579,27 @@ int min(int a , int b){
   return a>b?b:a;
 }
 void munmap(int id){
-
+  lock_acquire(&framelock);
   void * add= mapids[id];
   if(add==NULL)
     return;
   /* printf("are \n"); */
-  struct file* fi=SPT_lookup(add)->file;
+  struct file* fi=SPT_lookup(add,thread_current())->file;
   /* struct thread *cur = thread_current (); */
    /* = cur->fd_table[fd]; */
   int offset=0;
   while(1){
 /* printf("LOOP\n"); */
       
-    struct page_data *p = SPT_lookup(add);
+    struct page_data *p = SPT_lookup(add,thread_current());
     if(p!=NULL){ 
     /* printf("are %d \n",p); */
       if(p->loc==mmap1 && p->mapid==id){
 	write_back_map(add,fi,offset);	
-	SPT_remove(add);
+	SPT_remove(add,thread_current());
 	/* printf("are 1\n"); */
 	if(get_elem(add)!=NULL)
-	remove_mapping(add,pagedir_get_page(thread_current()->pagedir,add),get_elem(add));
+	  remove_mapping(add,pagedir_get_page(thread_current()->pagedir,add),get_elem(add),thread_current());
 	/* printf("are 3\n"); */
       }
       else break;}
@@ -606,6 +609,7 @@ void munmap(int id){
   }
   /* printf("are we out %d \n",id); */
   mapids[id]=NULL;
+  lock_release(&framelock);
 }
 
 int find_first_free(){

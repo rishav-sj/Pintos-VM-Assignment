@@ -22,9 +22,9 @@ struct frame{
 };
 
 void frame_init();
-void add_list(void *kapge,void *upage);
+
 void evict();
 
-bool add_mapping(void *upage , void *kpage , bool writable);
-void remove_mapping(void *upage,void* kpage,struct list_elem *e);
+bool add_mapping(void *upage , void *kpage , bool writable,bool setdirty);
+void remove_mapping(void *upage,void* kpage,struct list_elem *e,struct thread *t);
 

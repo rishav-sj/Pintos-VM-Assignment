@@ -2,7 +2,7 @@
 ;; --------------------------------------------------------------------------
 ;; Desktop File for Emacs
 ;; --------------------------------------------------------------------------
-;; Created Sun Apr 13 17:48:47 2014
+;; Created Tue Apr 15 16:41:10 2014
 ;; Desktop file format version 206
 ;; Emacs version 23.1.1
 
@@ -10,18 +10,18 @@
 (setq desktop-missing-file-warning nil)
 (setq tags-file-name nil)
 (setq tags-table-list nil)
-(setq search-ring '("thread_ex" "process_ex" "thread_ex" "process_terminate" "process_ter" "process_" "frame_init()" "frame_ini" "add_lis" "thread_ini" "add_lis" "bitmap_all" "pagedir_clea" "list_entr" "sys_open" "process_ter"))
+(setq search-ring '("file_read" "p->f" "sys_wa" "SPT" "SPR" "SPT" "SPT_loo" "SPT_lookup_" "frame_init" "setup_stack" "process_ex" "add_lis" "add_mapp" "add_ma" "add_mapp" "remove_mapp"))
 (setq regexp-search-ring nil)
-(setq register-alist '((48 . "4")))
+(setq register-alist '((48 . "	      PANIC(\"kpage still NULL \\n\");")))
 
 ;; Buffer section -- buffers listed in same order as in buffer list:
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/thread.c"
-  "thread.c"
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/lib/kernel/hash.h"
+  "hash.h"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  9600
-  '(9594 nil)
+  2175
+  '(nil nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -31,19 +31,41 @@
   "scr"
   'lisp-interaction-mode
   '(global-auto-revert-mode auto-complete-mode)
-  3277
-  '(3440 nil)
+  2501
+  '(3277 nil)
   nil
   nil
   '((buffer-file-coding-system . utf-8-unix)))
 
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/pt-write-code-2.c"
-  "pt-write-code-2.c"
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/process.c"
+  "process.c"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  319
-  '(83 nil)
+  7507
+  '(10862 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix) (fill-column . 24)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/process.h"
+  "process.h"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  248
+  '(222 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/frame.c"
+  "frame.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  2799
+  '(2388 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -53,41 +75,30 @@
   "exception.c"
   'c-mode
   '(auto-fill-mode abbrev-mode global-auto-revert-mode auto-complete-mode)
-  6944
-  '(9700 nil)
+  7478
+  '(7473 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
 
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/process.c"
-  "process.c"
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/interrupt.h"
+  "interrupt.h"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  7324
-  '(7132 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix) (fill-column . 24)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/write-bad-fd.c"
-  "write-bad-fd.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  425
+  1095
   '(nil nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
 
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/swap.c"
-  "swap.c"
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/interrupt.c"
+  "interrupt.c"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  1588
-  '(1758 nil)
+  12217
+  '(4863 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -97,8 +108,206 @@
   "syscall.c"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  702
-  '(117 nil)
+  14054
+  '(14078 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/filesys/file.c"
+  "file.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  4149
+  '(1861 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/swap.c"
+  "swap.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  1278
+  '(1939 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/child-linear.c"
+  "child-linear.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  703
+  '(12 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/palloc.c"
+  "palloc.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  4293
+  '(4218 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/frame.h"
+  "frame.h"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  641
+  '(353 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/page-parallel.c"
+  "page-parallel.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  427
+  '(14 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/pagedir.c"
+  "pagedir.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  1314
+  '(822 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/thread.h"
+  "thread.h"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  4084
+  '(5387 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/pagetable.c"
+  "pagetable.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  1524
+  '(1870 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/pagetable.h"
+  "pagetable.h"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  828
+  '(702 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . utf-8-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/init.c"
+  "init.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  3349
+  '(3135 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/thread.c"
+  "thread.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  9485
+  '(9533 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/swap.h"
+  "swap.h"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  161
+  '(139 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . utf-8-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/lib/kernel/list.c"
+  "list.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  3496
+  '(2255 nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/parallel-merge.c"
+  "parallel-merge.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  1789
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/args-many.ck"
+  "args-many.ck"
+  'perl-mode
+  '(global-auto-revert-mode auto-complete-mode)
+  1
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/page-merge-par.c"
+  "page-merge-par.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  128
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/write-bad-fd.c"
+  "write-bad-fd.c"
+  'c-mode
+  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
+  425
+  '(nil nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -115,34 +324,12 @@
   '((buffer-file-coding-system . undecided-unix)))
 
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/page-parallel.c"
-  "page-parallel.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  363
-  '(14 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
   "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/mmap-bad-fd.c"
   "mmap-bad-fd.c"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
   272
   '(nil nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/frame.c"
-  "frame.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  3210
-  '(4226 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -170,122 +357,12 @@
   '((buffer-file-coding-system . undecided-unix)))
 
 (desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/palloc.c"
-  "palloc.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  4233
-  '(4218 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/pagetable.h"
-  "pagetable.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  446
-  '(229 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . utf-8-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/pagedir.c"
-  "pagedir.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  275
-  '(4693 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
   "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/mmap-exit.c"
   "mmap-exit.c"
   'c-mode
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
   473
   '(nil nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/frame.h"
-  "frame.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  449
-  '(353 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/thread.h"
-  "thread.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  5235
-  '(5387 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/pagetable.c"
-  "pagetable.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  198
-  '(1579 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/vm/swap.h"
-  "swap.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  138
-  '(57 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . utf-8-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/userprog/process.h"
-  "process.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  223
-  '(nil nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/vm/child-linear.c"
-  "child-linear.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  145
-  '(12 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/lib/kernel/list.c"
-  "list.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  2562
-  '(2255 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -374,17 +451,6 @@
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
   5699
   '(5245 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/filesys/file.c"
-  "file.c"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  888
-  '(782 nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))
@@ -528,39 +594,6 @@
   '(abbrev-mode global-auto-revert-mode auto-complete-mode)
   304
   '(481 nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/lib/kernel/hash.h"
-  "hash.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  2175
-  '(nil nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/threads/interrupt.h"
-  "interrupt.h"
-  'c-mode
-  '(abbrev-mode global-auto-revert-mode auto-complete-mode)
-  483
-  '(nil nil)
-  nil
-  nil
-  '((buffer-file-coding-system . undecided-unix)))
-
-(desktop-create-buffer 206
-  "/home/wiselib/rahul/new/Pintos-VM-Assignment/pintos-userprog-reference/src/tests/userprog/args-many.ck"
-  "args-many.ck"
-  'perl-mode
-  '(global-auto-revert-mode auto-complete-mode)
-  1
-  '(nil nil)
   nil
   nil
   '((buffer-file-coding-system . undecided-unix)))

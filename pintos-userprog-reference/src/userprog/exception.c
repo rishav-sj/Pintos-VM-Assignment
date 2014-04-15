@@ -172,12 +172,12 @@ page_fault (struct intr_frame *f)
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
      which fault_addr refers. */
-  /* printf("do we reach here %p \n ",pg_round_down(fault_addr)); */
+  /* printf("do we reach here %p , esp : %p , %d \n ",pg_round_down(fault_addr),t->esp,t->tid); */
   
   if(user) t->esp= f->esp;
   /* printf(" %p \n",t->esp); */
   /* printf(" %p \n",(fault_addr)); */
-  struct page_data *p= SPT_lookup(pg_round_down(fault_addr));
+  struct page_data *p= SPT_lookup(pg_round_down(fault_addr),t);
   
   if(p!=NULL){
     /* printf(" asasas  \n"); */
@@ -187,21 +187,27 @@ page_fault (struct intr_frame *f)
 	{
 	  size_t page_zero_bytes = PGSIZE - p->page_read_bytes;
 	  uint8_t *kpage = palloc_get_page (PAL_USER);
- if (kpage == NULL){
+	  int ii=0;
+	  while(kpage == NULL){
+	    ii++;
 	    evict();
 	    kpage = palloc_get_page (PAL_USER);
-	    if(kpage==NULL)
-	      PANIC("kpage still NULL \n");
 	    /* return false; */
 	  }
+	 
+	  lock_acquire(&filesys_lock);
 	  file_seek(p->file,p->offset);
 	  /* printf("After file seek \n"); */
 	  
 	  /* Load this page. */
 	  int x=file_read (p->file, kpage,p->page_read_bytes);
-	  /* printf("file read %d: %d" ,x,p->page_read_bytes); */
+	  lock_release(&filesys_lock);
+	 
 	  if (x != (int)p->page_read_bytes)
 	    {
+	       if(ii)printf(" i= %d \n",ii);
+	        printf("file read %d: %d" ,x,p->page_read_bytes);
+	      PANIC("FILE NOT READ");
 	      /* printf("After file seek1 \n"); */
 	      palloc_free_page (kpage);
 	      t->exit_status = -1;
@@ -212,9 +218,9 @@ page_fault (struct intr_frame *f)
 	  /* Add the page to the process's address space. */
 	  /* printf("After file seek2 \n"); */
 	  /* printf("writeable: %d \n",p->writable); */
-	  if (!add_mapping (p->vaddr, kpage, p->writable)) 
+	  if (!add_mapping (p->vaddr, kpage, p->writable,false)) 
 	    {
-	      /* printf("After file seek3 \n"); */
+	      printf("After file seek3 \n");
 	      palloc_free_page (kpage);
 	      t->exit_status = -1;
 	      process_terminate();
@@ -229,11 +235,11 @@ page_fault (struct intr_frame *f)
 	{
 	  /* printf("After mmap \n"); */
 	  void *kpage= palloc_get_page(PAL_USER);
-	  if (kpage == NULL){
+	  while (kpage == NULL){
 	    evict();
 	    kpage = palloc_get_page (PAL_USER);
-	    if(kpage==NULL)
-	      PANIC("kpage still NULL \n");
+	    /* if(kpage==NULL) */
+	      /* PANIC("kpage still NULL \n"); */
 	    /* return false; */
 	  }
 	  /* int fd=p->fd; */
@@ -243,7 +249,7 @@ page_fault (struct intr_frame *f)
 	  file_read_at(fi,kpage,p->length,p->offset);
 	  /* printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset); */
 	  /* printf("check2 \n");	  */
-	  if (!add_mapping (p->vaddr, kpage,1)) 
+	  if (!add_mapping (p->vaddr, kpage,1,false)) 
 	    {
 	      PANIC("Couldnt add mapping in Mmap");
 	      palloc_free_page (kpage);
@@ -257,26 +263,26 @@ page_fault (struct intr_frame *f)
 	  /* printf("loading back swap  %p %p\n",p->vaddr,fault_addr); */
 	    /* lock_acquire(&frame_lock); */
 	  void *kpage= palloc_get_page(PAL_USER);
-	  if (kpage == NULL){
+	  while(kpage == NULL){
 	    evict();
 	    kpage = palloc_get_page (PAL_USER);
-	    if(kpage==NULL)
-	      PANIC("kpage still NULL \n");
+	    /* if(kpage==NULL) */
+	      /* PANIC("kpage still NULL \n"); */
 	    /* return false; */
 	  }
 	  
 	  /* lock_release(&frame_lock); */
-	  bool test=add_mapping (p->vaddr, kpage,1);
+	  bool test=add_mapping (p->vaddr, kpage,1,true);
 	   if (!test) 
 	    {
-	      /* PANIC("Couldnt add mapping in swap"); */
+	      PANIC("Couldnt add mapping in swap");
 	      palloc_free_page (kpage);    
 	      return false; 
 	    }
-	   else
-	     pagedir_set_dirty(t->pagedir,p->vaddr,true);
+	   /* else */
+	     /* pagedir_set_dirty(t->pagedir,p->vaddr,false); */
 	  read_page_from_swap(kpage,p->block_sector);
-	  SPT_remove(p);
+	  SPT_remove(p,t);
 	  return;
 	}
 	break;
@@ -289,20 +295,20 @@ page_fault (struct intr_frame *f)
       }
   }
   
-  /* printf(" we soundt be here \n"); */
+  printf(" we soundt be here  %d\n",t->tid);
   if( !( t->esp-fault_addr< (void *)128 || fault_addr-t->esp < (void*) 128))
     {
    t->exit_status = -1;
     process_terminate();
   }   
   if((!fault_addr) ||  (fault_addr >= (void*)PHYS_BASE) ) {
-    /* printf("term1\n"); */
-    /* PANIC("RUN"); */
+    printf("term1\n");
+    PANIC("RUN");
     t->exit_status = -1;
     process_terminate();
   }
   if(fault_addr>=CODE_SEG && fault_addr <= ( CODE_SEG+t->filesz)){
-    /* printf("Code segment access \n"); */
+    printf("Code segment access \n");
     t->exit_status = -1;
     process_terminate();
   }
@@ -331,13 +337,13 @@ page_fault (struct intr_frame *f)
     bool success = false;
   
     kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-    if( kpage==NULL){
+    while( kpage==NULL){
       evict();
       kpage=palloc_get_page (PAL_USER | PAL_ZERO);
     }
     if (kpage != NULL) 
       {
-	success = add_mapping (((uint8_t *) PHYS_BASE) -(t->numpages+1)*PGSIZE, kpage, true);
+	success = add_mapping (((uint8_t *) PHYS_BASE) -(t->numpages+1)*PGSIZE, kpage, true,false);
 	if (success){
 	  //*esp = PHYS_BASE;
 	  t->numpages++;
