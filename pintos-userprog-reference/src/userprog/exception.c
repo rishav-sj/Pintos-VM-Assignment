@@ -176,15 +176,20 @@ page_fault (struct intr_frame *f)
   
   if(user) t->esp= f->esp;
   /* printf(" %p \n",t->esp); */
-  /* printf(" %p \n",(fault_addr)); */
+ 
+  
+  lock_acquire(&t->SPT_lock);
+  /* printf("thread %d acquired own\n",t->tid); */
   struct page_data *p= SPT_lookup(pg_round_down(fault_addr),t);
   
   if(p!=NULL){
-    /* printf(" asasas  \n"); */
+    /* printf(" tid: %d \n",t->tid); */
     switch (p->loc)
       {
       case filesys:
 	{
+	  lock_release(&t->SPT_lock);
+	  /* printf("Starting filesys %p  %d relaseasing own lock \n",fault_addr,t->tid); */
 	  size_t page_zero_bytes = PGSIZE - p->page_read_bytes;
 	  uint8_t *kpage = palloc_get_page (PAL_USER);
 	  int ii=0;
@@ -195,18 +200,20 @@ page_fault (struct intr_frame *f)
 	    /* return false; */
 	  }
 	 
-	  lock_acquire(&filesys_lock);
-	  file_seek(p->file,p->offset);
+	  bool b=lock_held_by_current_thread(&filesys_lock);
+	  if(!b)lock_acquire(&filesys_lock);
+	  /* file_seek(p->file,p->offset); */
 	  /* printf("After file seek \n"); */
 	  
 	  /* Load this page. */
-	  int x=file_read (p->file, kpage,p->page_read_bytes);
-	  lock_release(&filesys_lock);
 	 
-	  if (x != (int)p->page_read_bytes)
+	   
+	  
+	  /* printf("file read %p: %p . Thread is %d \n" ,p->file,p->offset,t->tid); */
+	  if ( file_read_at (p->file, kpage,p->page_read_bytes,p->offset)!= (int)p->page_read_bytes)
 	    {
 	       if(ii)printf(" i= %d \n",ii);
-	        printf("file read %d: %d" ,x,p->page_read_bytes);
+	      
 	      PANIC("FILE NOT READ");
 	      /* printf("After file seek1 \n"); */
 	      palloc_free_page (kpage);
@@ -214,25 +221,28 @@ page_fault (struct intr_frame *f)
 	      process_terminate();
 	      return false; 
 	    }
+	  if(!b)lock_release(&filesys_lock);
 	  memset (kpage + p->page_read_bytes, 0, page_zero_bytes);
 	  /* Add the page to the process's address space. */
 	  /* printf("After file seek2 \n"); */
 	  /* printf("writeable: %d \n",p->writable); */
 	  if (!add_mapping (p->vaddr, kpage, p->writable,false)) 
 	    {
-	      printf("After file seek3 \n");
+	      /* printf("After file seek3 \n"); */
 	      palloc_free_page (kpage);
 	      t->exit_status = -1;
 	      process_terminate();
 	     
 	      return false; 
 	    }
-	  
+	  	  /* printf("Ending filesys %d \n",t->tid); */
 	  return;
 	}
 	break;
       case mmap1:
 	{
+	  lock_release(&t->SPT_lock);
+	  
 	  /* printf("After mmap \n"); */
 	  void *kpage= palloc_get_page(PAL_USER);
 	  while (kpage == NULL){
@@ -244,9 +254,11 @@ page_fault (struct intr_frame *f)
 	  }
 	  /* int fd=p->fd; */
 	  /* struct thread *cur = thread_current (); */
+	  lock_acquire(&filesys_lock);
 	  struct file* fi =p->file;
 	  /* printf("check1  %d\n",p->offset); */
 	  file_read_at(fi,kpage,p->length,p->offset);
+	  lock_release(&filesys_lock);
 	  /* printf("kapge : %s  %d  %d  \n",kpage,p->length,p->offset); */
 	  /* printf("check2 \n");	  */
 	  if (!add_mapping (p->vaddr, kpage,1,false)) 
@@ -255,13 +267,17 @@ page_fault (struct intr_frame *f)
 	      palloc_free_page (kpage);
 	      return false; 
 	    }
+
 	  return;
 	}
 	break;
       case swap:
 	{
-	  /* printf("loading back swap  %p %p\n",p->vaddr,fault_addr); */
+	  lock_release(&t->SPT_lock); 
+	  ASSERT(p->vaddr==pg_round_down(fault_addr));
+	  /* printf("loading back swap  %p , tid:%d \n",p->vaddr,t->tid); */
 	    /* lock_acquire(&frame_lock); */
+	  
 	  void *kpage= palloc_get_page(PAL_USER);
 	  while(kpage == NULL){
 	    evict();
@@ -282,7 +298,9 @@ page_fault (struct intr_frame *f)
 	   /* else */
 	     /* pagedir_set_dirty(t->pagedir,p->vaddr,false); */
 	  read_page_from_swap(kpage,p->block_sector);
-	  SPT_remove(p,t);
+	  SPT_remove(p->vaddr,t);
+	  /* printf("Ending swap  , tid:%d \n",t->tid); */
+	
 	  return;
 	}
 	break;
@@ -294,21 +312,21 @@ page_fault (struct intr_frame *f)
 	}
       }
   }
-  
-  printf(" we soundt be here  %d\n",t->tid);
+  	  lock_release(&t->SPT_lock);
+  /* printf(" we soundt be here  %d\n",t->tid); */
   if( !( t->esp-fault_addr< (void *)128 || fault_addr-t->esp < (void*) 128))
     {
    t->exit_status = -1;
     process_terminate();
   }   
   if((!fault_addr) ||  (fault_addr >= (void*)PHYS_BASE) ) {
-    printf("term1\n");
-    PANIC("RUN");
+    /* printf("term1\n"); */
+    /* PANIC("RUN"); */
     t->exit_status = -1;
     process_terminate();
   }
   if(fault_addr>=CODE_SEG && fault_addr <= ( CODE_SEG+t->filesz)){
-    printf("Code segment access \n");
+    /* printf("Code segment access \n"); */
     t->exit_status = -1;
     process_terminate();
   }

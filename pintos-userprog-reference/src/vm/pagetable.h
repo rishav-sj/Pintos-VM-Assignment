@@ -31,7 +31,7 @@ struct page_data
   int block_sector; //valid if loc==swap
 }; 
 
-struct lock SPT_lock;
+
 struct page_data *
 SPT_lookup (const void *address,struct thread *t);
 

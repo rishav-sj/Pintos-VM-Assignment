@@ -9,7 +9,7 @@
 #include "userprog/process.h"
 #include "threads/synch.h"
 #include "vm/pagetable.h"
-
+#include "userprog/syscall.h"
 
 
 
@@ -19,6 +19,7 @@ void frame_init(){
   lock_init(&framelock);
     /* SPT_init(); */
   lock_init(&filesys_lock2);
+  lock_init (&mapids_lock);
   list_init (&framelist);
   swap_init();
 }
@@ -60,16 +61,21 @@ void add_list(void *kpage,void *upage){
 void evict(){
  
   /* struct list_elem* e= first_clean(); */
+  /* printf("thread %d ,waiting for flock",thread_current()->tid); */
   lock_acquire(&framelock);
+ 
   struct list_elem* e= list_front(&framelist);
   struct frame *f = list_entry(e, struct frame , elem);
-  
+   bool lock_held=lock_held_by_current_thread(&f->thread->SPT_lock);
+   /* printf("framelock acquired %d %d current:%d \n",f->thread->tid,lock_held,thread_current()->tid);     */
+   ASSERT(!lock_held) 
+      lock_acquire(&f->thread->SPT_lock);
+    /* printf("Evict called by %d ,evicted thread,%d evicted address %p and lock_held=%d and after acquire=%d\n",thread_current()->tid,f->thread->tid,f->upage,lock_held,lock_held_by_current_thread(&f->thread->SPT_lock)); */
   if (pagedir_is_dirty(f->thread->pagedir,f->upage))
   /* if(e==NULL) */
   {
      
       ASSERT(f!=NULL);
-      
       /* printf("sector %d \n",sector); */
       struct page_data *p = SPT_lookup(f->upage,f->thread);
       if(p!=NULL){
@@ -79,11 +85,15 @@ void evict(){
 	    printf("removing2\n");
 		  write_back_map(f->upage,p->file,p->offset);	
 		  remove_mapping(f->upage,f->kpage,e,f->thread); 
-		   lock_release(&framelock);
+		  lock_release(&framelock);
+		   if(!lock_held)lock_release(&f->thread->SPT_lock);
 		   return;
 	  }
 	else
-	  SPT_remove(p->vaddr,f->thread);
+	  {
+	    ASSERT(p->loc!=swap);
+	    SPT_remove(p->vaddr,f->thread);
+	  }
       }
       int sector= write_page_to_swap(f->kpage);
       /* printf("evicton 4 \n"); */
@@ -92,25 +102,32 @@ void evict(){
       p1->vaddr=f->upage;
       p1->block_sector=sector;
       SPT_insert(p1,f->thread);
-
+      
       /* printf("evicton 5 \n"); */
       /* printf("in evic3 %p , %p thread: %d\n", f->upage,f->kpage,f->thread->tid); */
       remove_mapping(f->upage,f->kpage,e,f->thread); 
     }
   else
     {
- 
+      /* printf("found a non dirty page \n"); */
       remove_mapping(f->upage,f->kpage,e,f->thread); 
     }
+
+  /* printf("evict end%d and lock held =%d,lock_held2=%d \n",thread_current()->tid,lock_held_by_current_thread(&f->thread->SPT_lock),lock_held); */
+ 
+    lock_release(&f->thread->SPT_lock);
+
   lock_release(&framelock);
   /* PANIC("OUT OF MEMORY"); */
 }
 
 bool add_mapping(void *upage,void *kpage, bool writable,bool setdirty){
+  lock_acquire(&framelock);
+  
   struct thread *t = thread_current ();
   /* Verify that there's not already a page at that virtual
      address, then map our page there. */
-  lock_acquire(&framelock);
+ 
   bool status= (pagedir_get_page (t->pagedir, upage) == NULL
 		&& pagedir_set_page (t->pagedir, upage, kpage, writable));
   if(status){

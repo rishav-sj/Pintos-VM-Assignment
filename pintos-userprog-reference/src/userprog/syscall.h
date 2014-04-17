@@ -32,5 +32,5 @@ void munmap(int id);
 int mmap(int fd , char * addr);
 void clear_mmaps();
 void process_terminate(void);
-
+struct lock mapids_lock;
 #endif /* userprog/syscall.h */

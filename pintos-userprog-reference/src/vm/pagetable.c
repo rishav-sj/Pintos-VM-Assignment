@@ -75,7 +75,7 @@ void SPT_init(){
   struct thread *t=thread_current();
   t->pages=pages;
   hash_init (pages, page_hash, page_less, NULL);
-  lock_init(&SPT_lock);
+  lock_init(&thread_current()->SPT_lock);
   /* mapid=0; */
   int i;
   for(i=0;i<MAX_MAPS;i++){
@@ -99,8 +99,13 @@ bool SPT_remove(const void *address,struct thread *t ){
     struct hash* pages= t->pages;
   /* printf("Rempvogn address %p, \n", address); */
     struct page_data *p=SPT_lookup(address,t);
-  if(p==NULL) return false;
-  if(p->loc==mmap1) mapids[p->mapid]=NULL;
+    if(p==NULL){
+      printf("Removig address %p , current thread :%d ",address,t->tid);
+      PANIC("Entry not found");
+ 
+    }
+    /* printf("Removing address %p , by thread %d",address,t->tid); */
+    if(p->loc==mmap1) mapids[p->mapid]=NULL;
   hash_delete ( pages, &p->hash_elem);
   return true;
 }

@@ -124,7 +124,7 @@ main (void)
   exception_init ();
   syscall_init ();
 #endif
-  printf("init in theread \n");
+  /* printf("init in theread \n"); */
  
   /* Start thread scheduler and enable interrupts. */
   thread_start ();

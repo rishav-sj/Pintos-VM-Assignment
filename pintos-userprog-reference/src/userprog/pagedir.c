@@ -29,7 +29,7 @@ void
 pagedir_destroy (uint32_t *pd) 
 {
   uint32_t *pde;
-  printf("pagedirc called by %d \n",thread_current()->tid);
+  /* printf("pagedirc called by %d \n",thread_current()->tid); */
   if (pd == NULL)
     return;
 

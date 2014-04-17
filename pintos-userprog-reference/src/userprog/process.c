@@ -23,7 +23,7 @@
 #include "debug_helper.h"
 #include "vm/frame.h"
 #include "vm/pagetable.h"
-struct lock filesys_lock2;
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 void print_pagedir(uint32_t* pagedir);
@@ -76,7 +76,7 @@ process_execute (const char *file_name_)
 static void
 start_process (void *file_name_)
 {
-  printf("start proces\n");
+  /* printf("start proces\n"); */
  
   SPT_init();
   char *file_name = 0;
@@ -372,7 +372,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
 bool
 load (const char *file_name, void (**eip) (void), void **esp) 
 {
-  printf("load \n");
+  /* printf("load \n"); */
   struct thread *t = thread_current ();
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
@@ -562,6 +562,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   lock_acquire(&filesys_lock2);
   file_seek (file, ofs);
   off_t offset=ofs;
+  struct thread *t = thread_current ();
   while (read_bytes > 0 || zero_bytes > 0) 
     {
       
@@ -604,7 +605,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       p->vaddr=upage;
       p->writable=writable;
       p->offset=offset;
-      SPT_insert(p,thread_current());
+      SPT_insert(p,t);
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;

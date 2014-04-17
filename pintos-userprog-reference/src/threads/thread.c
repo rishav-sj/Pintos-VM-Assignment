@@ -18,7 +18,7 @@
 #include "vm/pagetable.h"
 #include <list.h>
 #include <hash.h>
-
+#include <userprog/syscall.h>
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -106,7 +106,7 @@ thread_init (void)
   list_init (&all_list);
   list_init (&all_zombie);
   lock_init (&filesys_lock);
- 
+
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
@@ -335,19 +335,34 @@ void
 thread_exit (void) 
 {
   ASSERT (!intr_context ());
-  clear_mmaps();
-  /* printf(" thread exit 2\n");   */
-  free_res();
-  if(lock_held_by_current_thread(&filesys_lock))
-     lock_release(&filesys_lock);
-#ifdef USERPROG
-  process_exit ();
-#endif
-
   if(lock_held_by_current_thread(&framelock))
      lock_release(&framelock);
   if(lock_held_by_current_thread(&swap_lock))
     lock_release(&swap_lock);
+  if(lock_held_by_current_thread(&filesys_lock))
+     lock_release(&filesys_lock);
+
+  lock_acquire(&framelock);
+ 
+  lock_acquire(&filesys_lock);
+
+  lock_acquire(&mapids_lock);
+  clear_mmaps();
+  	/* printf("fai1\n"); */
+  lock_release(&framelock);
+ 	/* printf("fai2\n"); */
+  lock_release(&filesys_lock);
+  	/* printf("fai3\n"); */
+  lock_release(&mapids_lock);
+ 	/* printf("fai4\n"); */
+  /* printf(" thread exit 2\n");   */
+
+  free_res();
+  
+#ifdef USERPROG
+  process_exit ();
+#endif
+
 
     /* printf(" thread exit 1\n"); */
   /* clear_mmaps(); */

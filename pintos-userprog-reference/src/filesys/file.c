@@ -3,7 +3,7 @@
 #include <debug.h>
 #include "filesys/inode.h"
 #include "threads/malloc.h"
-
+#include "threads/thread.h"
 /* An open file. */
 struct file 
   {
@@ -18,6 +18,9 @@ struct file
 struct file *
 file_open (struct inode *inode) 
 {
+    /* if(!lock_held_by_current_thread(&filesys_lock)) */
+      /* PANIC("IN OPEN"); */
+    /* printf("Unsynchronised access1 by %d \n",thread_current()->tid); */
   struct file *file = calloc (1, sizeof *file);
   if (inode != NULL && file != NULL)
     {
@@ -73,6 +76,8 @@ file_read (struct file *file, void *buffer, off_t size)
 {
   off_t bytes_read = inode_read_at (file->inode, buffer, size, file->pos);
   file->pos += bytes_read;
+    /* if(!lock_held_by_current_thread(&filesys_lock)) */
+    /* printf("Unsynchronised access4 by %d \n",thread_current()->tid); */
   return bytes_read;
 }
 
@@ -97,8 +102,14 @@ file_read_at (struct file *file, void *buffer, off_t size, off_t file_ofs)
 off_t
 file_write (struct file *file, const void *buffer, off_t size) 
 {
+    /* bool b=lock_held_by_current_thread(&filesys_lock); */
+    /* if(!b)lock_acquire(&filesys_lock); */
   off_t bytes_written = inode_write_at (file->inode, buffer, size, file->pos);
   file->pos += bytes_written;
+
+    /* PANIC("IN Write"); */
+  /* if(!b) lock_release(&filesys_lock); */
+ /* printf("Unsynchronised access3 by %d \n",thread_current()->tid); */
   return bytes_written;
 }
 
@@ -158,6 +169,8 @@ file_seek (struct file *file, off_t new_pos)
 {
   ASSERT (file != NULL);
   ASSERT (new_pos >= 0);
+  /* if(!lock_held_by_current_thread(&filesys_lock)) */
+  /*   printf("Unsynchronised access2 by %d \n",thread_current()->tid); */
   file->pos = new_pos;
 }
 

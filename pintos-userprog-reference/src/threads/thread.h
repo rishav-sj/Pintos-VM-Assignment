@@ -132,6 +132,7 @@ struct thread
     int numpages;  /* 1 initially, incremented on every additional page */
     uint32_t filesz;
     struct hash  *pages;
+    struct lock SPT_lock;
 };
 
 /* If false (default), use round-robin scheduler.
